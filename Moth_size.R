@@ -8,7 +8,7 @@ moth_smaller <- resize(moth, -50)
 # Plot the image
 plot(moth_smaller,main="moths")
 
-#convert rbg to hsv since I think it will be easier to mess with (especially future shadows)
+#convert 
 moth_hsv <- RGBtoHSV(moth_smaller)
 
 #color Masking!!! w/binary channels
@@ -25,13 +25,13 @@ black_mask <- (V < 0.2)
 #Adding other pretty colors :)
 green_mask <- (H > 90) & (H < 160) & (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 0.8)
 blue_mask <- (H > 220) & (H < 250) & (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 0.8)
-lightblue_mask <- (H > 160) & (H < 190) & (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 0.8)
+lightblue_mask <- (H > 165) & (H < 210) & (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 0.8)
 
 # took me an hour ro learn this but Hue is a circular range 0-360
 #SOOO if we look at a color like red it is both at 360 and 0, so I put an OR statment(that's y the line)
 #basically from 0-30 OR 306-330
 red_mask <- ((H >= 0 & H <= 30) | (H >= 330 & H <= 360))& (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 0.8)
-yellow_mask <- (H > 55) & (H < 70) & (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 0.8)
+yellow_mask <- (H > 55) & (H < 75) & (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 0.8)
 
 gray_mask <- (S < 0.2) & (V > 0.2) & (V < 0.8)
 
@@ -49,11 +49,11 @@ apply_hsv_mask <- function(HSVimage, mask){
 #masked_black <- apply_hsv_mask(moth_hsv, black_mask)
 #masked_gray <- apply_hsv_mask(moth_hsv, gray_mask)
 
-#masked_green <- apply_hsv_mask(moth_hsv, green_mask)
-#masked_blue <- apply_hsv_mask(moth_hsv, blue_mask)
-#masked_lightblue <- apply_hsv_mask(moth_hsv, lightblue_mask)
-#masked_red <- apply_hsv_mask(moth_hsv, red_mask)
-#masked_yellow <- apply_hsv_mask(moth_hsv, yellow_mask)
+masked_green <- apply_hsv_mask(moth_hsv, green_mask)
+masked_blue <- apply_hsv_mask(moth_hsv, blue_mask)
+masked_lightblue <- apply_hsv_mask(moth_hsv, lightblue_mask)
+masked_red <- apply_hsv_mask(moth_hsv, red_mask)
+masked_yellow <- apply_hsv_mask(moth_hsv, yellow_mask)
 
 #gather them up
 masked_colors <- white_mask | black_mask | gray_mask | 
@@ -77,22 +77,45 @@ plot(combined_rgb, main = "All Color Masks Combined")
 #masked_color <- HSVtoRGB(masked_gray)
 #plot(masked_color, main = "gray Regions")
 
-#masked_color <- HSVtoRGB(masked_green)
-#plot(masked_color, main = "Green Regions")
+masked_color <- HSVtoRGB(masked_green)
+plot(masked_color, main = "Green Regions")
 
-#masked_color <- HSVtoRGB(masked_blue)
-#plot(masked_color, main = "Blue Regions")
+masked_color <- HSVtoRGB(masked_blue)
+plot(masked_color, main = "Blue Regions")
 
-#masked_color <- HSVtoRGB(masked_lightblue)
-#plot(masked_color, main = "Light Blue Regions")
+masked_color <- HSVtoRGB(masked_lightblue)
+plot(masked_color, main = "Light Blue Regions")
 
-#masked_color <- HSVtoRGB(masked_red)
-#plot(masked_color, main = "Red Regions")
+masked_color <- HSVtoRGB(masked_red)
+plot(masked_color, main = "Red Regions")
 
-#masked_color <- HSVtoRGB(masked_yellow)
-#plot(masked_color, main = "Yellow Regions")
+masked_color <- HSVtoRGB(masked_yellow)
+plot(masked_color, main = "Yellow Regions")
 
 
 summary(H)
 summary(S)
 summary(V)
+
+#Inversts the colors so I can see how messy this is
+#https://dahtah.github.io/imager/morphology.html
+not_mask <- !masked_colors
+plot(not_mask, main = "Moth Mask")
+highlight(not_mask)
+
+moth_mask_num <- as.cimg(not_mask)
+moth_mask_clean <- threshold(moth_mask_num, "16%")
+px <- as.pixset(moth_mask_clean) #convert to pixset
+
+px_shrink<-shrink(px,7)
+plot(px_shrink, main="Shrinking")
+highlight(not_mask)
+
+px_grow<-grow(px_shrink,7)
+plot(px_grow, main="Shrinking then Growing")
+highlight(px_fill)
+
+px_clean <-clean(px_grow,4)
+px_fill<-fill(px_grow,35)
+plot(px_fill,main="After filling-in")
+highlight(px_fill)
