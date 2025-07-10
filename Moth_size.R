@@ -1,3 +1,5 @@
+#DISCLAIMER White AND gray are both background masks until I make a light gray mask
+
 library (imager)
 
 #Start off easy with loading files
@@ -31,7 +33,7 @@ lightblue_mask <- (H > 160) & (H < 190) & (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 
 red_mask <- ((H >= 0 & H <= 30) | (H >= 330 & H <= 360))& (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 0.8)
 yellow_mask <- (H > 55) & (H < 70) & (S > 0.2) &(S < 0.8)& (V > 0.2)& (V < 0.8)
 
-grey_mask <- (S < 0.2) & (V > 0.2) & (V < 0.8)
+gray_mask <- (S < 0.2) & (V > 0.2) & (V < 0.8)
 
 # https://stackoverflow.com/questions/76929194/how-to-apply-a-binary-mask-to-a-rgb-image-in-r-with-imager
 apply_hsv_mask <- function(HSVimage, mask){
@@ -45,7 +47,7 @@ apply_hsv_mask <- function(HSVimage, mask){
 
 #masked_white <- apply_hsv_mask(moth_hsv, white_mask)
 #masked_black <- apply_hsv_mask(moth_hsv, black_mask)
-#masked_grey <- apply_hsv_mask(moth_hsv, grey_mask)
+#masked_gray <- apply_hsv_mask(moth_hsv, gray_mask)
 
 #masked_green <- apply_hsv_mask(moth_hsv, green_mask)
 #masked_blue <- apply_hsv_mask(moth_hsv, blue_mask)
@@ -54,7 +56,7 @@ apply_hsv_mask <- function(HSVimage, mask){
 #masked_yellow <- apply_hsv_mask(moth_hsv, yellow_mask)
 
 #gather them up
-masked_colors <- white_mask | black_mask | grey_mask | 
+masked_colors <- white_mask | black_mask | gray_mask | 
   green_mask | blue_mask | lightblue_mask | 
   red_mask | yellow_mask
 
@@ -72,8 +74,8 @@ plot(combined_rgb, main = "All Color Masks Combined")
 #masked_color <- HSVtoRGB(masked_black)
 #plot(masked_color, main = "Black Regions")
 
-#masked_color <- HSVtoRGB(masked_grey)
-#plot(masked_color, main = "Grey Regions")
+#masked_color <- HSVtoRGB(masked_gray)
+#plot(masked_color, main = "gray Regions")
 
 #masked_color <- HSVtoRGB(masked_green)
 #plot(masked_color, main = "Green Regions")
