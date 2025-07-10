@@ -6,7 +6,7 @@ moth_smaller <- resize(moth, -50)
 # Plot the image
 plot(moth_smaller,main="moths")
 
-#convert 
+#convert rbg to hsv since I think it will be easier to mess with (especially future shadows)
 moth_hsv <- RGBtoHSV(moth_smaller)
 
 #color Masking!!! w/binary channels
