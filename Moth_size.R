@@ -3,9 +3,11 @@
 library (imager)
 
 #Start off easy with loading files
-moth <- load.image("C:/Users/Jen/OneDrive/Desktop/moths_s25/moths_s25/Geometridae/Protoboarmia_porcelaria/Protoboarmia_porcelaria_527.jpg")
-moth_smaller <- resize(moth, -50)
-# Plot the image
+
+#"C:/Users/Jen/OneDrive/Desktop/moths_s25/moths_s25/Geometridae/Protoboarmia_porcelaria/Protoboarmia_porcelaria_527.jpg"
+moth_pic <- load.image("C:/Users/Jen/OneDrive/Desktop/moths_set2/moths_set2/Geometridae/Pasiphila_rectangulata/Pasiphila_rectangulata_625.JPG")
+moth_smaller <- resize(moth_pic, -50)
+#Plot the image
 plot(moth_smaller,main="moths")
 
 #convert 
@@ -101,7 +103,7 @@ summary(V)
 #Inversts the colors so I can see how messy this is
 #https://dahtah.github.io/imager/morphology.html
 not_mask <- !masked_colors
-plot(not_mask, main = "Future moth Mask")
+#plot(not_mask, main = "Future moth Mask")
 
 #clean them up so the moth is more isolated (we will have to tweek evenually)
 #I wanted to clean up the masks but it didn't work very well
@@ -110,30 +112,29 @@ mask_clean <- threshold(mask_num, "16%")
 px <- as.pixset(mask_clean) #convert to pixset
 
 px_blur<-isoblur(px,2)#Helps keep the moth's detail since it was really pixelated
-plot(px_blur,main="Blurred")
+#plot(px_blur,main="Blurred")
 
 px_thresh <- px_blur > 0.2
-plot(px_thresh,main="binary again") #It was true or false earlier and now the blur changed it so we have to reset it back
+#plot(px_thresh,main="binary again") #It was true or false earlier and now the blur changed it so we have to reset it back
 
 px_clean<-clean(px_thresh,11) #resizes the pixels small then large again which helps with little dots 
-plot(px_clean,main="Cleaned")
+#plot(px_clean,main="Cleaned")
 
 px_fill<-fill(px_clean,9) # fills in the moth, but if it is too strong we lose detail
-plot(px_fill,main="Filled")
+#plot(px_fill,main="Filled")
 
 #Now we get to see the actual moth, this example looks good but it will definetly vary with moths
 #Color correcting will be super important for the moth
 masked_moth <- apply_hsv_mask(moth_hsv,px_fill )
 masked_color <- HSVtoRGB(masked_moth)
-plot(masked_color, main = "Moth Regions (finally)")
+#plot(masked_color, main = "Moth Regions (finally)")
 
 #combine them all together
 masks_all<-masked_combined+masked_moth #moth has a few lightspots where it was filled (I think it's a good thing)
 combined_masks <- HSVtoRGB(masks_all )
-plot(combined_masks, main = "All Masks Combined")
+#plot(combined_masks, main = "All Masks Combined")
 
 #I decided to highlight them since I wanted to see all the seprate layers
-#highlight(green_mask)
 #highlight(blue_mask)
 #highlight(red_mask)
 #highlight(yellow_mask)
@@ -143,44 +144,56 @@ plot(combined_masks, main = "All Masks Combined")
 #I dont want to worry about white and gray they are too close in color
 
 #MASKING PORTION DONE!!! (now the hard part, figuring out size)
-
-mask_blur <- isoblur(black_mask, 2) #I ended up having to clean them up I got no choice
-mask_thresh <- mask_blur > 0.2
-mask_clean <- clean(mask_thresh, 11)
-
-mask_clean <- as.cimg(mask_clean > 0)
-labeled_mask <- label(mask_clean) 
-num_regions <- max(labeled_mask) #each section
-
-print(num_regions) #YAY it gave me the right amount 3 regions for black :)
-
 plot(moth_smaller)
-img_height <- dim(moth_smaller)[1]
-img_width <- dim(moth_smaller)[2] 
+mask <- list(black=black_mask,   #I tried them sepratly and it looked good so I am going to loop this
+                    green=green_mask,
+                    blue=blue_mask,
+                    lightblue=lightblue_mask,
+                    red=red_mask,
+                    yellow=yellow_mask
+             )
 
-for (region_id in 1:num_regions) {  #make a loop to go through all 3 regions
-  pix <- which(labeled_mask == region_id, arr.ind = TRUE)
+for (colors in names(mask)){
   
-  xmin <- min(pix[,2]) 
-  xmax <- max(pix[,2])
-  ymin <- min(pix[,1])
-  ymax <- max(pix[,1])
+  mask_clean <- as.cimg(mask_clean > 0)
+  labeled_mask <- label(mask_clean) 
+  mask_rect <- mask[[colors]] #callign the colors
   
-  rect( #had to flip them cause it went the wrong way
-    xleft = ymin,
-    ybottom = xmax,
-    xright = ymax,
-    ytop = xmin,
-    border = "blue",
-    lwd =2 #line width so we can see it
-  )
+  mask_blur <- isoblur(mask_rect, 2) #I ended up having to clean them up I got no choice
+  mask_thresh <- mask_blur > 0.2
+  mask_clean <- clean(mask_thresh, 11)
+
+  num_regions <- max(labeled_mask) #each section
   
-print(sprintf("Region %d: xmin=%d xmax=%d ymin=%d ymax=%d", 
-              region_id, xmin, xmax, ymin, ymax)) #tells me position
-width <- xmax - xmin + 1
-height <- ymax - ymin + 1
-print(sprintf("Region %d: width = %d px, height = %d px", 
-              region_id, width, height))#tells me height and width
+  print(mask)
+  print(num_regions) #YAY it gave me the right amount 3 regions for black :)
+  #plot(mask_clean)
+
+  img_height <- dim(moth_smaller)[1]
+  img_width <- dim(moth_smaller)[2] 
+
+  for (region_id in 1:num_regions) {  #make a loop to go through all 3 regions
+    pix <- which(labeled_mask == region_id, arr.ind = TRUE)
+  
+    xmin <- min(pix[,2]) 
+    xmax <- max(pix[,2])
+    ymin <- min(pix[,1])
+    ymax <- max(pix[,1])
+  
+    rect( #had to flip them cause it went the wrong way
+      xleft = ymin,
+      ybottom = xmax,
+     xright = ymax,
+     ytop = xmin,
+     border = "blue",
+      lwd =2 #line width so we can see it
+    )
+  
+    print(sprintf("Region %d: xmin=%d xmax=%d ymin=%d ymax=%d", 
+                  region_id, xmin, xmax, ymin, ymax)) #tells me position
+    width <- xmax - xmin + 1
+    height <- ymax - ymin + 1
+    print(sprintf("Region %d: width = %d px, height = %d px", 
+                  region_id, width, height))#tells me height and width
+  }
 }
-
-
