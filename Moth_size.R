@@ -133,13 +133,13 @@ combined_masks <- HSVtoRGB(masks_all )
 plot(combined_masks, main = "All Masks Combined")
 
 #I decided to highlight them since I wanted to see all the seprate layers
-highlight(green_mask)
-highlight(blue_mask)
-highlight(red_mask)
-highlight(yellow_mask)
-highlight(lightblue_mask)
-highlight(black_mask)
-highlight(masked_moth)
+#highlight(green_mask)
+#highlight(blue_mask)
+#highlight(red_mask)
+#highlight(yellow_mask)
+#highlight(lightblue_mask)
+#highlight(black_mask)
+#highlight(masked_moth)
 #I dont want to worry about white and gray they are too close in color
 
 #MASKING PORTION DONE!!! (now the hard part, figuring out size)
@@ -177,6 +177,8 @@ for (region_id in 1:num_regions) {  #make a loop to go through all 3 regions
   
 print(sprintf("Region %d: xmin=%d xmax=%d ymin=%d ymax=%d", 
               region_id, xmin, xmax, ymin, ymax)) #tells me position
+width <- xmax - xmin + 1
+height <- ymax - ymin + 1
 print(sprintf("Region %d: width = %d px, height = %d px", 
               region_id, width, height))#tells me height and width
 }
