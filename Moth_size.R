@@ -1,5 +1,5 @@
 #DISCLAIMER White AND gray are both background masks until I make a light gray mask
-
+#TO DO- Add all the rectangles and make it so we can average them to find length and width of moth
 library (imager)
 
 #Start off easy with loading files
@@ -42,6 +42,7 @@ apply_hsv_mask <- function(HSVimage, mask){
   value <- channel(HSVimage, 3) * mask
   return(imappend(list(hue, saturation, value), "c"))
 }
+
 #Apply dem masks yo, it will extract specific colors from moth pic
 #We don't need these anymore but I am gonna keep them for later
 
@@ -49,11 +50,11 @@ apply_hsv_mask <- function(HSVimage, mask){
 #masked_black <- apply_hsv_mask(moth_hsv, black_mask)
 #masked_gray <- apply_hsv_mask(moth_hsv, gray_mask)
 
-masked_green <- apply_hsv_mask(moth_hsv, green_mask)
-masked_blue <- apply_hsv_mask(moth_hsv, blue_mask)
-masked_lightblue <- apply_hsv_mask(moth_hsv, lightblue_mask)
-masked_red <- apply_hsv_mask(moth_hsv, red_mask)
-masked_yellow <- apply_hsv_mask(moth_hsv, yellow_mask)
+#masked_green <- apply_hsv_mask(moth_hsv, green_mask)
+#masked_blue <- apply_hsv_mask(moth_hsv, blue_mask)
+#masked_lightblue <- apply_hsv_mask(moth_hsv, lightblue_mask)
+#masked_red <- apply_hsv_mask(moth_hsv, red_mask)
+#masked_yellow <- apply_hsv_mask(moth_hsv, yellow_mask)
 
 #gather them up
 masked_colors <- white_mask | black_mask | gray_mask | 
@@ -77,20 +78,20 @@ plot(combined_rgb, main = "All Color Masks Combined")
 #masked_color <- HSVtoRGB(masked_gray)
 #plot(masked_color, main = "gray Regions")
 
-masked_color <- HSVtoRGB(masked_green)
-plot(masked_color, main = "Green Regions")
+#masked_color <- HSVtoRGB(masked_green)
+#plot(masked_color, main = "Green Regions")
 
-masked_color <- HSVtoRGB(masked_blue)
-plot(masked_color, main = "Blue Regions")
+#masked_color <- HSVtoRGB(masked_blue)
+#plot(masked_color, main = "Blue Regions")
 
-masked_color <- HSVtoRGB(masked_lightblue)
-plot(masked_color, main = "Light Blue Regions")
+#masked_color <- HSVtoRGB(masked_lightblue)
+#plot(masked_color, main = "Light Blue Regions")
 
-masked_color <- HSVtoRGB(masked_red)
-plot(masked_color, main = "Red Regions")
+#masked_color <- HSVtoRGB(masked_red)
+#plot(masked_color, main = "Red Regions")
 
-masked_color <- HSVtoRGB(masked_yellow)
-plot(masked_color, main = "Yellow Regions")
+#masked_color <- HSVtoRGB(masked_yellow)
+#plot(masked_color, main = "Yellow Regions")
 
 
 summary(H)
@@ -100,22 +101,84 @@ summary(V)
 #Inversts the colors so I can see how messy this is
 #https://dahtah.github.io/imager/morphology.html
 not_mask <- !masked_colors
-plot(not_mask, main = "Moth Mask")
-highlight(not_mask)
+plot(not_mask, main = "Future moth Mask")
 
-moth_mask_num <- as.cimg(not_mask)
-moth_mask_clean <- threshold(moth_mask_num, "16%")
-px <- as.pixset(moth_mask_clean) #convert to pixset
+#clean them up so the moth is more isolated (we will have to tweek evenually)
+#I wanted to clean up the masks but it didn't work very well
+mask_num <- as.cimg(not_mask)
+mask_clean <- threshold(mask_num, "16%")
+px <- as.pixset(mask_clean) #convert to pixset
 
-px_shrink<-shrink(px,7)
-plot(px_shrink, main="Shrinking")
-highlight(not_mask)
+px_blur<-isoblur(px,2)#Helps keep the moth's detail since it was really pixelated
+plot(px_blur,main="Blurred")
 
-px_grow<-grow(px_shrink,7)
-plot(px_grow, main="Shrinking then Growing")
-highlight(px_fill)
+px_thresh <- px_blur > 0.2
+plot(px_thresh,main="binary again") #It was true or false earlier and now the blur changed it so we have to reset it back
 
-px_clean <-clean(px_grow,4)
-px_fill<-fill(px_grow,35)
-plot(px_fill,main="After filling-in")
-highlight(px_fill)
+px_clean<-clean(px_thresh,11) #resizes the pixels small then large again which helps with little dots 
+plot(px_clean,main="Cleaned")
+
+px_fill<-fill(px_clean,9) # fills in the moth, but if it is too strong we lose detail
+plot(px_fill,main="Filled")
+
+#Now we get to see the actual moth, this example looks good but it will definetly vary with moths
+#Color correcting will be super important for the moth
+masked_moth <- apply_hsv_mask(moth_hsv,px_fill )
+masked_color <- HSVtoRGB(masked_moth)
+plot(masked_color, main = "Moth Regions (finally)")
+
+#combine them all together
+masks_all<-masked_combined+masked_moth #moth has a few lightspots where it was filled (I think it's a good thing)
+combined_masks <- HSVtoRGB(masks_all )
+plot(combined_masks, main = "All Masks Combined")
+
+#I decided to highlight them since I wanted to see all the seprate layers
+highlight(green_mask)
+highlight(blue_mask)
+highlight(red_mask)
+highlight(yellow_mask)
+highlight(lightblue_mask)
+highlight(black_mask)
+highlight(masked_moth)
+#I dont want to worry about white and gray they are too close in color
+
+#MASKING PORTION DONE!!! (now the hard part, figuring out size)
+
+mask_blur <- isoblur(black_mask, 2) #I ended up having to clean them up I got no choice
+mask_thresh <- mask_blur > 0.2
+mask_clean <- clean(mask_thresh, 11)
+
+mask_clean <- as.cimg(mask_clean > 0)
+labeled_mask <- label(mask_clean) 
+num_regions <- max(labeled_mask) #each section
+
+print(num_regions) #YAY it gave me the right amount 3 regions for black :)
+
+plot(moth_smaller)
+img_height <- dim(moth_smaller)[1]
+img_width <- dim(moth_smaller)[2] 
+
+for (region_id in 1:num_regions) {  #make a loop to go through all 3 regions
+  pix <- which(labeled_mask == region_id, arr.ind = TRUE)
+  
+  xmin <- min(pix[,2]) 
+  xmax <- max(pix[,2])
+  ymin <- min(pix[,1])
+  ymax <- max(pix[,1])
+  
+  rect( #had to flip them cause it went the wrong way
+    xleft = ymin,
+    ybottom = xmax,
+    xright = ymax,
+    ytop = xmin,
+    border = "blue",
+    lwd =2 #line width so we can see it
+  )
+  
+print(sprintf("Region %d: xmin=%d xmax=%d ymin=%d ymax=%d", 
+              region_id, xmin, xmax, ymin, ymax)) #tells me position
+print(sprintf("Region %d: width = %d px, height = %d px", 
+              region_id, width, height))#tells me height and width
+}
+
+
