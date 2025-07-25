@@ -3,9 +3,9 @@
 library (imager)
 
 #Start off easy with loading files
-
+#"C:/Users/Jen/OneDrive/Desktop/moths_set2/moths_set2/Geometridae/Pasiphila_rectangulata/Pasiphila_rectangulata_625.JPG"
 #"C:/Users/Jen/OneDrive/Desktop/moths_s25/moths_s25/Geometridae/Protoboarmia_porcelaria/Protoboarmia_porcelaria_527.jpg"
-moth_pic <- load.image("C:/Users/Jen/OneDrive/Desktop/moths_set2/moths_set2/Geometridae/Pasiphila_rectangulata/Pasiphila_rectangulata_625.JPG")
+moth_pic <- load.image("C:/Users/Jen/OneDrive/Desktop/moths_s25/moths_s25/Geometridae/Protoboarmia_porcelaria/Protoboarmia_porcelaria_527.jpg")
 moth_smaller <- resize(moth_pic, -50)
 #Plot the image
 plot(moth_smaller,main="moths")
@@ -146,49 +146,50 @@ combined_masks <- HSVtoRGB(masks_all )
 #MASKING PORTION DONE!!! (now the hard part, figuring out size)
 plot(moth_smaller)
 mask <- list(black=black_mask,   #I tried them sepratly and it looked good so I am going to loop this
-                    green=green_mask,
-                    blue=blue_mask,
-                    lightblue=lightblue_mask,
-                    red=red_mask,
-                    yellow=yellow_mask
-             )
+             green=green_mask,
+             blue=blue_mask,
+             lightblue=lightblue_mask,
+             red=red_mask,
+             yellow=yellow_mask,
+             moth=px_fill
+)
 
 for (colors in names(mask)){
   
-  mask_clean <- as.cimg(mask_clean > 0)
-  labeled_mask <- label(mask_clean) 
   mask_rect <- mask[[colors]] #callign the colors
   
   mask_blur <- isoblur(mask_rect, 2) #I ended up having to clean them up I got no choice
   mask_thresh <- mask_blur > 0.2
   mask_clean <- clean(mask_thresh, 11)
-
+  filled_mask <- fill(mask_clean, 9)
+  
+  labeled_mask <- label(filled_mask)
   num_regions <- max(labeled_mask) #each section
   
   print(mask)
   print(num_regions) #YAY it gave me the right amount 3 regions for black :)
   #plot(mask_clean)
-
+  
   img_height <- dim(moth_smaller)[1]
   img_width <- dim(moth_smaller)[2] 
-
+  
   for (region_id in 1:num_regions) {  #make a loop to go through all 3 regions
     pix <- which(labeled_mask == region_id, arr.ind = TRUE)
-  
+    
     xmin <- min(pix[,2]) 
     xmax <- max(pix[,2])
     ymin <- min(pix[,1])
     ymax <- max(pix[,1])
-  
+    
     rect( #had to flip them cause it went the wrong way
       xleft = ymin,
       ybottom = xmax,
-     xright = ymax,
-     ytop = xmin,
-     border = "blue",
+      xright = ymax,
+      ytop = xmin,
+      border = "blue",
       lwd =2 #line width so we can see it
     )
-  
+    
     print(sprintf("Region %d: xmin=%d xmax=%d ymin=%d ymax=%d", 
                   region_id, xmin, xmax, ymin, ymax)) #tells me position
     width <- xmax - xmin + 1
