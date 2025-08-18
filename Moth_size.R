@@ -5,8 +5,8 @@ library (imager)
 #Start off easy with loading files
 #"C:/Users/Jen/OneDrive/Desktop/moths_set2/moths_set2/Geometridae/Pasiphila_rectangulata/Pasiphila_rectangulata_625.JPG"
 #"C:/Users/Jen/OneDrive/Desktop/moths_s25/moths_s25/Geometridae/Protoboarmia_porcelaria/Protoboarmia_porcelaria_527.jpg"
-moth_pic <- load.image("C:/Users/Jen/OneDrive/Desktop/moths_s25/moths_s25/Geometridae/Protoboarmia_porcelaria/Protoboarmia_porcelaria_527.jpg")
-moth_smaller <- resize(moth_pic, -50)
+moth_pic <- load.image("C:/Users/slate/Desktop/Protoboarmia_porcelaria_527.JPG")
+moth_smaller <- resize(moth_pic,-50, -50)
 #Plot the image
 plot(moth_smaller,main="moths")
 
@@ -154,6 +154,11 @@ mask <- list(black=black_mask,   #I tried them sepratly and it looked good so I 
              moth=px_fill
 )
 
+#THIS IS FOR SIZE
+rectangle_sizes <- list() #empty list, I am gonna have it add as it finds the rectangles
+#I have it so it is set up with width,height,color(for identification)
+moth_sizes <-list()
+
 for (colors in names(mask)){
   
   mask_rect <- mask[[colors]] #callign the colors
@@ -173,9 +178,9 @@ for (colors in names(mask)){
   img_height <- dim(moth_smaller)[1]
   img_width <- dim(moth_smaller)[2] 
   
-  for (region_id in 1:num_regions) {  #make a loop to go through all 3 regions
-    pix <- which(labeled_mask == region_id, arr.ind = TRUE)
-    
+  for (region in 1:num_regions) {  #make a loop to go through all 3 regions
+    pix <- which(labeled_mask == region, arr.ind = TRUE)
+                 #color name              #array thingy for min and max
     xmin <- min(pix[,2]) 
     xmax <- max(pix[,2])
     ymin <- min(pix[,1])
@@ -187,14 +192,66 @@ for (colors in names(mask)){
       xright = ymax,
       ytop = xmin,
       border = "blue",
-      lwd =2 #line width so we can see it
+      lwd =1 #line width so we can see it
     )
     
-    print(sprintf("Region %d: xmin=%d xmax=%d ymin=%d ymax=%d", 
-                  region_id, xmin, xmax, ymin, ymax)) #tells me position
+    #print(sprintf("Region %d: xmin=%d xmax=%d ymin=%d ymax=%d", 
+    #              region, xmin, xmax, ymin, ymax)) #tells me position
     width <- xmax - xmin + 1
     height <- ymax - ymin + 1
-    print(sprintf("Region %d: width = %d px, height = %d px", 
-                  region_id, width, height))#tells me height and width
+    #print(sprintf("Region %d: width = %d px, height = %d px", 
+     #             region, width, height))#tells me height and width
+    
+ #Now I wanna just list all the rectangle sizes real quick 
+    #but we definetly want to exclude the moth 
+    if(colors != "moth"){
+      rectangle_sizes<-append (rectangle_sizes,
+                               list(list(width=width,height=height,color=colors)))}
+    
+    else{
+      moth_sizes<-append(moth_sizes,
+                         list(list(width=width,height=height,color="moth")))}
   }
 }
+
+#print(rectangle_sizes)
+#print(moth_sizes)
+#quick double check
+
+#ok so now I have it set up so there is a list giving us the 
+#width,height, color
+#so it basically says Width= 150 Height= 92, Color= "yellow")
+#if I use $ it allows me to be able to pull an element from the list
+rect_longside<-list() #new lists
+
+for (element in rectangle_sizes){
+  #I want it to find the longer side 
+  longer_side<-max(element$width,element$height) #find the max number from l or w
+  rect_longside <- append(rect_longside, longer_side)
+}
+
+#I keep getting an error abt "x must be atomic" apparently I have to unlist the varibles from the list?
+rect_longside_unlisted <-unlist(rect_longside)
+
+#I am not going to do the average, median is wa better if there are outliers
+median_length<-median(rect_longside_unlisted)
+print(median_length) #so median is 196 px
+
+px_to_cm= 1/median_length # median length = 1 cm
+
+#FINALLLY THE MOTH
+moth_conversion_width <- list() #moth list as a conversion
+moth_conversion_height <- list() #list for if there is more than 1 moth
+
+for (centimeters in (moth_sizes)) {
+  width_cm <- centimeters$width * px_to_cm
+  height_cm <- centimeters$height * px_to_cm
+  
+  moth_conversion_width <- append(moth_conversion_width, width_cm) #add this to the list
+  moth_conversion_height <- append(moth_conversion_height, height_cm)
+}
+moth_conversion_width_unlisted <-unlist(moth_conversion_width) #unlist it like before
+moth_conversion_height_unlisted <-unlist(moth_conversion_height)
+
+print(moth_conversion_width) #print itttt (they look abt 1.5cm,2cm)
+print(moth_conversion_height)
