@@ -235,8 +235,7 @@ rect_longside_unlisted <-unlist(rect_longside)
 
 #I am not going to do the average, median is wa better if there are outliers
 median_length<-median(rect_longside_unlisted)
-print(m
-      edian_length) #so median is 196 px
+print(median_length) #so median is 196 px
 
 px_to_cm= 1/median_length # median length = 1 cm
 
@@ -258,9 +257,6 @@ print(moth_conversion_width) #print itttt (they look abt 1.5cm,2cm)
 print(moth_conversion_height)
 
 ##Ok so now we have the height and width in cm YAY!!! but now I want to find the wingshape
-
-
-
 
 # I want to try edge detection on this The website I am refrencing has a great example so I am gonna try to recreate that
 #https://cran.r-project.org/web/packages/imager/vignettes/gettingstarted.html#example-2-edge-detection
@@ -286,5 +282,5 @@ library(ggplot2)
 edge_df <- data.frame(x = x_vals, y = -y_vals)
 
 ggplot(edge_df, aes(x = x, y = y)) +
-  geom_point(size = 0.3, color = "purple") 
+  geom_point(size = 0.3, color = "purple") #make it pretty :)
 
