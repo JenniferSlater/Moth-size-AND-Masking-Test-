@@ -180,7 +180,7 @@ for (colors in names(mask)){
   
   for (region in 1:num_regions) {  #make a loop to go through all 3 regions
     pix <- which(labeled_mask == region, arr.ind = TRUE)
-                 #color name              #array thingy for min and max
+    #color name              #array thingy for min and max
     xmin <- min(pix[,2]) 
     xmax <- max(pix[,2])
     ymin <- min(pix[,1])
@@ -200,9 +200,9 @@ for (colors in names(mask)){
     width <- xmax - xmin + 1
     height <- ymax - ymin + 1
     #print(sprintf("Region %d: width = %d px, height = %d px", 
-     #             region, width, height))#tells me height and width
+    #             region, width, height))#tells me height and width
     
- #Now I wanna just list all the rectangle sizes real quick 
+    #Now I wanna just list all the rectangle sizes real quick 
     #but we definetly want to exclude the moth 
     if(colors != "moth"){
       rectangle_sizes<-append (rectangle_sizes,
@@ -235,7 +235,8 @@ rect_longside_unlisted <-unlist(rect_longside)
 
 #I am not going to do the average, median is wa better if there are outliers
 median_length<-median(rect_longside_unlisted)
-print(median_length) #so median is 196 px
+print(m
+      edian_length) #so median is 196 px
 
 px_to_cm= 1/median_length # median length = 1 cm
 
@@ -255,3 +256,35 @@ moth_conversion_height_unlisted <-unlist(moth_conversion_height)
 
 print(moth_conversion_width) #print itttt (they look abt 1.5cm,2cm)
 print(moth_conversion_height)
+
+##Ok so now we have the height and width in cm YAY!!! but now I want to find the wingshape
+
+
+
+
+# I want to try edge detection on this The website I am refrencing has a great example so I am gonna try to recreate that
+#https://cran.r-project.org/web/packages/imager/vignettes/gettingstarted.html#example-2-edge-detection
+Greyscale_moth <- channel(masked_moth, 3)
+plot(Greyscale_moth, main="Greyscale of Moth") #Kinda looks weird but trust the process
+
+#gr <- imgradient(Greyscale_moth,"xy")
+#plot(gr, main="imgradient")<--Gives error cause it is gradient X and Y direction
+#gr #I think it saying Image list of size 2 is good news...
+
+#plot(gr,layout="row")
+
+dx <- imgradient(Greyscale_moth,"x") #this will be the x and y direction
+dy <- imgradient(Greyscale_moth,"y")
+
+grad.mag <- sqrt(dx^2+dy^2) #I think this could be adjusted for strength
+plot(grad.mag,main="Gradient magnitude")
+
+# so I followed what they have and now I have a nice border 
+#now I want to plot ittt :)))
+library(ggplot2)
+
+edge_df <- data.frame(x = x_vals, y = -y_vals)
+
+ggplot(edge_df, aes(x = x, y = y)) +
+  geom_point(size = 0.3, color = "purple") 
+
