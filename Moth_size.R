@@ -1,5 +1,5 @@
 #DISCLAIMER White AND gray are both background masks until I make a light gray mask
-#TO DO- Add all the rectangles and make it so we can average them to find length and width of moth
+#TO DO- Create a line connecting the dots and detect the angle of the moth wings
 library (imager)
 
 #Start off easy with loading files
@@ -265,22 +265,78 @@ plot(Greyscale_moth, main="Greyscale of Moth") #Kinda looks weird but trust the 
 
 #gr <- imgradient(Greyscale_moth,"xy")
 #plot(gr, main="imgradient")<--Gives error cause it is gradient X and Y direction
-#gr #I think it saying Image list of size 2 is good news...
+#I think it saying Image list of size 2 is good news...
 
 #plot(gr,layout="row")
 
 dx <- imgradient(Greyscale_moth,"x") #this will be the x and y direction
 dy <- imgradient(Greyscale_moth,"y")
 
-grad.mag <- sqrt(dx^2+dy^2) #I think this could be adjusted for strength
+#"The magnitude of the gradients thus tell us how fast the image changes around a certain point. 
+#Image edges correspond to abrupt changes in the image, and so it’s reasonable to estimate their location based on the norm of the gradient" 
+grad.mag <- sqrt(dx^2+dy^2)
 plot(grad.mag,main="Gradient magnitude")
-
 # so I followed what they have and now I have a nice border 
 #now I want to plot ittt :)))
+
+#lets start by having it list some x and y data I have
+#print(dx) #that doesn't work very well cause it is an image :)
+#print(dy)
+limited_points<- grad.mag > 0.2 #limits the data points so only the white ones
+wings <- as.data.frame(limited_points) #converts to data
+            #returns true if it fits the limited threshold
+coords <- which(limited_points, arr.ind = TRUE)
+wing_points <- data.frame(
+  yy=coords[,1], #this will be my y corrd/row
+  xx=coords[,2] #this will be my y coord/colum
+)
+#find the centroid :)
+centroid_xx<-mean(xx)
+centroid_yy<-mean(yy)
+
+print(centroid_xx)
+print(centroid_yy)
+
+centroid <- data.frame(
+  yy=centroid_yy, #to fix my error
+  xx=centroid_xx 
+)
+#print(wing_points) #yayyy it worked :))
+
+#https://r-graph-gallery.com/272-basic-scatterplot-with-ggplot2.html 
+
 library(ggplot2)
+#ok so now we have the data, lets make a scatter plotttt
+ggplot(wing_points, aes(x=xx, y=yy)) + 
+  geom_point(
+    color="purple",
+    size=1)+ #make it pretty:)
+#The plus here is to add onto it (this is gonna be for the point)
+#_____________________Moth has been plotted :)))________________________________
 
-edge_df <- data.frame(x = x_vals, y = -y_vals)
+#After the talk with Joe and Eliza, I am going to find the center of the moth and then find the angles of each dot
 
-ggplot(edge_df, aes(x = x, y = y)) +
-  geom_point(size = 0.3, color = "purple") #make it pretty :)
+#1 find the center of the moth 
+#looks like I want to find the "centroid" 
+#https://en.wikipedia.org/wiki/Centroid 
+#https://stackoverflow.com/questions/23463324/r-add-centroids-to-scatter-plot
+  geom_point(data = centroid, aes(x = xx, y = yy), 
+             color = "pink", 
+             size = 5) +
+  #its kinda lopsided but I think I can make it fixed and fix it (its also upsidedown)
+  scale_y_reverse()+
+  coord_fixed()+
+  ggtitle("moth ploted with centroid :))")
+
+#In geom_point(aes(x = centroid_xx, y = centroid_yy), color = "pink",  :
+#All aesthetics have length 1, but the data has 1661 rows.
+#ℹ Please consider using `annotate()` or provide this
+#layer with data containing a single row.
+
+#2 Now I want to find the angle from that point to the others and draw in that order
+#if a point is at the same angle then pick closest to the dot to draw next :)
+  #The plus here is to add onto it (this is gonna be for the point
+
+
+
 
